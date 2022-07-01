@@ -1,26 +1,28 @@
-import { useEffect } from 'react';
-import s from './ContactList.module.css'
-import { useDispatch, useSelector } from 'react-redux';
-import { phonebookSelector, phonebookOperation } from '../../redux/contacts/phone-book';
+import { useSelector } from 'react-redux';
+
+import ContactListItem from './ContactListItem/ContactListItem';
+import { ContactListBox } from './ContactList.styled';
 
 export default function ContactList() {
-    const contacts = useSelector(phonebookSelector.getFilterContacts);
-    const dispatch = useDispatch();
+    const contacts = useSelector(state => state.phonebook.items.contacts);
+    const filterValue = useSelector(state => state.phonebook.filter);
 
-    useEffect(() => {
-        dispatch(phonebookOperation.fetchContacts());
-    }, [dispatch]);
+    const isVisibleContacts = () =>
+        contacts.filter(contact =>
+            contact.name.toLowerCase().includes(filterValue.toLowerCase()),
+        );
+    const filterContact = isVisibleContacts();
 
     return (
-        <ul className={s.list}>
-            {contacts.map(({ id, name, number }) => (
-                <li key={id} className={s.item}>
-                    {name}: {number}
-                    <button onClick={() => dispatch(phonebookOperation.deleteContact(id))} type="button" className={s.button}>DELETE</button>
-
-                </li>
-
+        <ContactListBox>
+            {filterContact.map(contact => (
+                <ContactListItem
+                    name={contact.name}
+                    number={contact.number}
+                    key={contact.id}
+                    id={contact.id}
+                />
             ))}
-        </ul>
+        </ContactListBox>
     );
 }

@@ -1,55 +1,58 @@
 
 import { useState } from 'react';
+import { nanoid } from 'nanoid';
 import { useDispatch, useSelector } from 'react-redux';
-import { phonebookSelector, phonebookOperation } from '../../redux/contacts/phone-book';
-import s from '../ContactForm/ContactForm.module.css'
+import { Notify } from 'notiflix';
+import { Form, FormLabel, Input } from './ContactForm.styled';
+import { contactsOperations } from '../../redux/contacts';
 
 
 
 export default function ContactForm() {
-    const [name, setName] = useState('');
-    const [number, setNumber] = useState('');
-    const contacts = useSelector(phonebookSelector.getContacts);
     const dispatch = useDispatch();
+    const contacts = useSelector(state => state.phonebook.items.contacts);
+    const [form, setForm] = useState({
+        name: "",
+        number: "",
+    });
 
-    const handleChange = e => {
-        const { name, value } = e.target;
-        switch (name) {
-            case 'name':
-                setName(value);
-                break;
-            case 'number':
-                setNumber(value);
-                break;
-            default:
-                return;
+    const handleChange = ({ target }) => {
+        const { name, value } = target;
+        setForm(prevForm => ({ ...prevForm, [name]: value }));
+    };
+    const { name, number } = form;
+
+    const isUniqueContact = () => {
+        const isExistContact = contacts.find(contact => contact.name === name);
+        if (isExistContact) {
+            Notify.failure("Contact is already exist");
         }
+        return !isExistContact;
+    };
+    const validateForm = () => {
+        if (!name || !number) {
+            Notify.failure("Some field is empty");
+            return false;
+        }
+        return isUniqueContact(name);
     };
 
     const handleSubmit = e => {
         e.preventDefault();
-        if (
-            contacts.find(
-                contact => contact.name.toLowerCase() === name.toLowerCase(),
-            )
-        ) {
-            alert(`${name} is already in contacts.`);
-        } else if (contacts.find(contact => contact.number === number)) {
-            alert(`${number} is already in contacts.`);
-        } else if (!name.trim() || !number.trim()) {
-            alert("Enter the contact's name and number phone!");
-        } else {
-            dispatch(phonebookOperation.addContact({ name, number }));
-            setName('');
-            setNumber('');
-        }
+        const isValidateForm = validateForm();
+        if (!isValidateForm) return;
+        dispatch(
+            contactsOperations.createContacts({ id: nanoid(10), name, number }),
+            Notify.success("Contact is add phonebook"),
+        );
+        const resetForm = () => setForm({ name: "", number: "" });
+        resetForm();
     };
     return (
-        <form onSubmit={handleSubmit} className={s.form}>
-            <label className={s.label}>
+        <Form onSubmit={handleSubmit}>
+            <FormLabel>
                 Name
-                <input
-                    className={s.input}
+                <Input
                     type="text"
                     name="name"
                     value={name}
@@ -58,11 +61,10 @@ export default function ContactForm() {
                     onChange={handleChange}
                     required
                 />
-            </label>
-            <label className={s.label}>
+            </FormLabel>
+            <FormLabel>
                 Phone Number
-                <input
-                    className={s.input}
+                <Input
                     type="tel"
                     name="number"
                     value={number}
@@ -71,10 +73,10 @@ export default function ContactForm() {
                     onChange={handleChange}
                     required
                 />
-            </label>
+            </FormLabel>
             <button type="submit" className={s.button}>
                 Add Contact
             </button>
-        </form>
+        </Form>
     );
 }

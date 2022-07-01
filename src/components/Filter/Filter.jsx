@@ -1,14 +1,20 @@
-import React from 'react';
-import s from './Filter.module.css'
 import { useDispatch, useSelector } from 'react-redux';
-import { phonebookAction, phonebookSelector } from '../../redux/contacts/phone-book';
+import { Input } from '../ContactForm/ContactForm.styled';
+import { filterContact } from '../../redux/contacts/contactsSlice';
 
-export default function Filter() {
-    const filter = useSelector(phonebookSelector.getFilter);
+function Filter() {
     const dispatch = useDispatch();
+    const filterValue = useSelector(state => state.phonebook.filter);
+
     return (
-        <label className={s.label}>
-            <input type="text" value={filter} onChange={e => dispatch(phonebookAction.changeFilter(e.target.value))} className={s.input} />
-        </label>
+        <Input
+            type="text"
+            name="filter"
+            value={filterValue}
+            onChange={e => dispatch(filterContact(e.target.value))}
+            placeholder="Enter name for Search"
+        />
     );
 }
+
+export default Filter;
